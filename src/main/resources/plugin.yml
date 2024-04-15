@@ -1,0 +1,4 @@
+name: AnimalCapture
+version: '${version}'
+main: dev.acronical.animalcapture.AnimalCapture
+api-version: '1.20'
