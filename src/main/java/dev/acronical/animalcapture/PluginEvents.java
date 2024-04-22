@@ -34,7 +34,9 @@ public class PluginEvents implements Listener {
         logger.info("Mob: " + mob.getName());
         Player player = e.getPlayer();
         logger.info("Player: " + player.getName());
-        mob.setLeashHolder(player);
+        mob.setInvulnerable(true);
+        // ! Make the mob ride the player
+        player.addPassenger(mob);
     }
 
     @EventHandler
@@ -48,7 +50,7 @@ public class PluginEvents implements Listener {
         // ! Reset the mob on the player's leash
         Animals mob = (Animals) player.getWorld().getEntities().stream().filter(entity -> entity instanceof Animals && ((Animals) entity).getLeashHolder() == player).findFirst().orElse(null);
         if (mob == null) return;
-        mob.setLeashHolder(null);
+        player.removePassenger(mob);
         // ! Get the mob respawn location from MobList
         String mobName = mob.getName().toLowerCase();
         String[] mobData = null;
