@@ -7,7 +7,6 @@ public final class AnimalCapture extends JavaPlugin {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new PluginEvents(), this);
-        getCommand("hit").setExecutor(new PluginCommands());
         getServer().getConsoleSender().sendMessage("[AnimalCapture] Plugin enabled!");
     }
 
