@@ -22,7 +22,21 @@ public class PluginEvents implements Listener {
 
     String[][] MobList = {
         {"mooshroom", "200", "82","195" },
-        {"polar_bear", "264", "82","191" }
+        {"polar bear", "264", "82","191" },
+        {"chicken", "", "", ""},
+        {"cow", "", "", ""},
+        {"sheep", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
+        {"", "", "", ""},
     };
 
     Logger logger = Logger.getLogger("AnimalCapture");
@@ -35,7 +49,7 @@ public class PluginEvents implements Listener {
         Animals ridingMob = (Animals) player.getPassengers().stream().filter(entity -> entity instanceof Animals).findFirst().orElse(null);
         logger.info("Player interacted with entity");
         if (player.getPassengers().size() == 1 || ridingMob != null) player.removePassenger(ridingMob);
-        logger.info("Mob: " + mob.getName());
+        logger.info("Mob: " + mob.getEntityId());
         logger.info("Player: " + player.getName());
         mob.setInvulnerable(true);
         // ! Make the mob ride the player
