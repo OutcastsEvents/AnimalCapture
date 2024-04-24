@@ -1,18 +1,18 @@
 package dev.acronical.animalcapture;
 
-import io.papermc.paper.event.entity.EntityMoveEvent;
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.World;
 import org.bukkit.entity.Animals;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.scoreboard.Team;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -23,23 +23,80 @@ public class PluginEvents implements Listener {
     String[][] MobList = {
         {"mooshroom", "200", "82","195" },
         {"polar bear", "264", "82","191" },
-        {"chicken", "", "", ""},
-        {"cow", "", "", ""},
-        {"sheep", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
-        {"", "", "", ""},
+//        {"chicken", "", "", ""},
+//        {"cow", "", "", ""},
+//        {"sheep", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
+//        {"", "", "", ""},
     };
 
     Logger logger = Logger.getLogger("AnimalCapture");
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        Player player = e.getPlayer();
+        World world = player.getWorld();
+        int playerCount = player.getServer().getOnlinePlayers().size();
+        int halfPlayerCount = playerCount / 2;
+        Team redTeam = player.getScoreboard().getTeam("red");
+        Team blueTeam = player.getScoreboard().getTeam("blue");
+        if (redTeam == null || blueTeam == null) return;
+        if (player.getScoreboardTags().contains("admin")) return;
+        player.setRespawnLocation(new Location(world, -90, 0, 69));
+        player.teleport(new Location(world, -90, 0, 69));
+        if (redTeam.getSize() < halfPlayerCount) {
+            redTeam.addEntry(player.getName());
+            player.teleportAsync(new Location(world, -10.5, -47, 73));
+            player.setRespawnLocation(new Location(world, -10.5, -47, 73));
+            String msg = "You are on the §4§lRED§r team!";
+            player.setHealth(20);
+            player.setFoodLevel(20);
+            player.setSaturation(20);
+            player.sendMessage("§2The game has started!");
+            player.sendMessage(msg);
+        } else if (blueTeam.getSize() < halfPlayerCount) {
+            blueTeam.addEntry(player.getName());
+            player.teleportAsync(new Location(world, -172.5, -47, 73));
+            player.setRespawnLocation(new Location(world, -172.5, -47, 73));
+            String msg = "You are on the §1§lBLUE§r team!";
+            player.setHealth(20);
+            player.setFoodLevel(20);
+            player.setSaturation(20);
+            player.sendMessage("§2The game has started!");
+            player.sendMessage(msg);
+        } else {
+            if (redTeam.getSize() < blueTeam.getSize()) {
+                redTeam.addEntry(player.getName());
+                player.teleportAsync(new Location(world, -10.5, -47, 73));
+                player.setRespawnLocation(new Location(world, -10.5, -47, 73));
+                String msg = "You are on the §4§lRED§r team!";
+                player.setHealth(20);
+                player.setFoodLevel(20);
+                player.setSaturation(20);
+                player.sendMessage("§2The game has started!");
+                player.sendMessage(msg);
+            } else {
+                blueTeam.addEntry(player.getName());
+                player.teleportAsync(new Location(world, -172.5, -47, 73));
+                player.setRespawnLocation(new Location(world, -172.5, -47, 73));
+                String msg = "You are on the §1§lBLUE§r team!";
+                player.setHealth(20);
+                player.setFoodLevel(20);
+                player.setSaturation(20);
+                player.sendMessage("§2The game has started!");
+                player.sendMessage(msg);
+            }
+        }
+    }
 
     @EventHandler
     public void onAnimalCapture(PlayerInteractEntityEvent e) {
@@ -48,28 +105,27 @@ public class PluginEvents implements Listener {
         Player player = e.getPlayer();
         Animals ridingMob = (Animals) player.getPassengers().stream().filter(entity -> entity instanceof Animals).findFirst().orElse(null);
         logger.info("Player interacted with entity");
-        if (player.getPassengers().size() == 1 || ridingMob != null) player.removePassenger(ridingMob);
-        logger.info("Mob: " + mob.getEntityId());
+        if (player.getPassengers().size() == 1 && ridingMob != null) player.removePassenger(ridingMob);
+        logger.info("Mob: " + mob.getName());
         logger.info("Player: " + player.getName());
         mob.setInvulnerable(true);
         // ! Make the mob ride the player
         player.addPassenger(mob);
-        e.setCancelled(true);
     }
 
     @EventHandler
     public void onAnimalDrop(PlayerInteractEvent e) {
-        Player player = e.getPlayer();
-        Animals mob = (Animals) player.getPassengers().stream().filter(entity -> entity instanceof Animals).findFirst().orElse(null);
-        if (mob == null || player.getPassengers().isEmpty()) {
-            e.setCancelled(true);
-            return;
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            Player player = e.getPlayer();
+            Animals mob = (Animals) player.getPassengers().stream().filter(entity -> entity instanceof Animals).findFirst().orElse(null);
+            if (mob == null || player.getPassengers().isEmpty()) return;
+            player.removePassenger(mob);
         }
-        player.removePassenger(mob);
     }
 
     @EventHandler
     public void onPlayerDamaged(EntityDamageByEntityEvent e) {
+        World world = e.getEntity().getWorld();
         if (!(e.getEntity() instanceof Player player)) return;
         logger.info("Player damaged");
         if (!(e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK)) return;
@@ -96,6 +152,7 @@ public class PluginEvents implements Listener {
         if (mobData == null) return;
         // ! Respawn the mob
         logger.info("Teleporting mob!");
-        mob.teleport(new Location(mob.getWorld(), Double.parseDouble(mobData[1]), Double.parseDouble(mobData[2]), Double.parseDouble(mobData[3])));
+        if (attacker.getPassengers().size() == 1) mob.teleport(new Location(world, Double.parseDouble(Objects.requireNonNull(mobData[1])), Double.parseDouble(Objects.requireNonNull(mobData[2])), Double.parseDouble(Objects.requireNonNull(mobData[3]))));
+        else attacker.addPassenger(mob);
     }
 }

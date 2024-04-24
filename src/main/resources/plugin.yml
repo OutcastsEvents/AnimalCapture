@@ -1,4 +1,34 @@
 name: AnimalCapture
-version: '${version}'
+version: '1.0.0'
 main: dev.acronical.animalcapture.AnimalCapture
 api-version: '1.20'
+description: Race to capture all the animals before the enemy team does!
+author: Acronical
+website: https://acronical.is-a.dev/projects
+commands:
+  captureinit:
+    description: Initialize the plugin
+    usage: /captureinit
+    aliases:
+      - initcapture
+  capturestart:
+    description: Start the game
+    usage: /capturestart
+    aliases:
+      - startcapture
+  capturestop:
+    description: Stop the game
+    usage: /capturestop
+    aliases:
+      - stopcapture
+default-permission: op
+permissions:
+  animalcapture.captureinit:
+    description: Initialize the plugin
+    default: op
+  animalcapture.capturestart:
+    description: Start the game
+    default: op
+  animalcapture.capturestop:
+    description: Stop the game
+    default: op
