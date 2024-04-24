@@ -98,4 +98,11 @@ public class PluginEvents implements Listener {
         logger.info("Teleporting mob!");
         mob.teleport(new Location(mob.getWorld(), Double.parseDouble(mobData[1]), Double.parseDouble(mobData[2]), Double.parseDouble(mobData[3])));
     }
+
+    /**
+     TODO: Logic for point scoring
+     * * Score when player has passengers and is on their team's block
+     * * Add score to player scoreboard and use variables in this file to have the total score
+     * ! Variable must be publicly accessible from PluginCommands
+     **/
 }
