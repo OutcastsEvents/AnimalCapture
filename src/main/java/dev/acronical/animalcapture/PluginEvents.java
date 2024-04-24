@@ -155,4 +155,11 @@ public class PluginEvents implements Listener {
         if (attacker.getPassengers().size() == 1) mob.teleport(new Location(world, Double.parseDouble(Objects.requireNonNull(mobData[1])), Double.parseDouble(Objects.requireNonNull(mobData[2])), Double.parseDouble(Objects.requireNonNull(mobData[3]))));
         else attacker.addPassenger(mob);
     }
+
+    /**
+     TODO: Logic for point scoring
+     * * Score when player has passengers and is on their team's block
+     * * Add score to player scoreboard and use variables in this file to have the total score
+     * ! Variable must be publicly accessible from PluginCommands
+     **/
 }
