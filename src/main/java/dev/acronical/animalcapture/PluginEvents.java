@@ -12,6 +12,8 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Team;
 
 import java.util.Arrays;
@@ -132,32 +134,14 @@ public class PluginEvents implements Listener {
         logger.info("Player attacked by entity");
         if (!(e.getDamager() instanceof Player attacker)) return;
         logger.info("Player attacked by player");
-        // ! Reset the mob on the player's leash
         Animals mob = (Animals) player.getPassengers().stream().filter(entity -> entity instanceof Animals).findFirst().orElse(null);
         if (mob == null) return;
         player.removePassenger(mob);
-        // ! Get the mob respawn location from MobList
-        String mobName = mob.getName().toLowerCase();
-        String[] mobData = null;
-        for (String[] mobEntry : MobList) {
-            logger.info("Checking list!");
-            logger.info(Arrays.toString(mobEntry) + "\n" + mobName);
-            if (mobEntry[0].equals(mobName)) {
-                logger.info("Found mob!");
-                mobData = mobEntry;
-                logger.info("Set mob!");
-                break;
-            }
-        }
-        if (mobData == null) return;
-        // ! Respawn the mob
-        logger.info("Teleporting mob!");
-        if (attacker.getPassengers().size() == 1) mob.teleport(new Location(world, Double.parseDouble(Objects.requireNonNull(mobData[1])), Double.parseDouble(Objects.requireNonNull(mobData[2])), Double.parseDouble(Objects.requireNonNull(mobData[3]))));
-        else attacker.addPassenger(mob);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2, 255, true, true, false));
     }
 
     /**
-     TODO: Logic for point scoring
+     * TODO: Logic for point scoring
      * * Score when player has passengers and is on their team's block
      * * Add score to player scoreboard and use variables in this file to have the total score
      * ! Variable must be publicly accessible from PluginCommands
