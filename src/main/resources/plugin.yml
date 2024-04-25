@@ -21,6 +21,16 @@ commands:
     usage: /capturestop
     aliases:
       - stopcapture
+  captureannounce:
+    description: Announce the winner
+    usage: /captureannounce
+    aliases:
+      - announcecapture
+  capturereset:
+    description: Reset the scores
+    usage: /capturereset
+    aliases:
+      - resetcapture
 default-permission: op
 permissions:
   animalcapture.captureinit:
@@ -31,4 +41,10 @@ permissions:
     default: op
   animalcapture.capturestop:
     description: Stop the game
+    default: op
+  animalcapture.captureannounce:
+    description: Announce the winner
+    default: op
+  animalcapture.capturereset:
+    description: Reset the scores
     default: op

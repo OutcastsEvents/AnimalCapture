@@ -10,6 +10,8 @@ public final class AnimalCapture extends JavaPlugin {
         getCommand("captureinit").setExecutor(new PluginCommands());
         getCommand("capturestart").setExecutor(new PluginCommands());
         getCommand("capturestop").setExecutor(new PluginCommands());
+        getCommand("capturereset").setExecutor(new PluginCommands());
+        getCommand("captureannounce").setExecutor(new PluginCommands());
         getServer().getConsoleSender().sendMessage("[AnimalCapture] Plugin enabled!");
     }
 
