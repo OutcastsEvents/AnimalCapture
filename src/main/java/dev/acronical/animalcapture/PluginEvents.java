@@ -112,10 +112,11 @@ public class PluginEvents implements Listener {
             EntityType finalFound = found;
             int mobCount = (int) world.getEntities().stream().filter(entity -> entity.getType() == finalFound).count();
             for (int i = 2; mobCount < i; mobCount++) {
-                Entity mob = world.spawnEntity(mobLocation, found);
+                LivingEntity mob = (LivingEntity) world.spawnEntity(mobLocation, found);
                 logger.info("Spawned entity " + found.name().toLowerCase() + " at " + x + ", " + y + ", " + z);
                 mob.setInvulnerable(true);
                 mob.setPersistent(true);
+                mob.setRemoveWhenFarAway(false);
                 if (mob instanceof Animals animal) {
                     animal.setInvulnerable(true);
                     animal.setAggressive(false);
