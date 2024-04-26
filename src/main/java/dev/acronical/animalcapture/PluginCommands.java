@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -18,6 +19,7 @@ import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 public class PluginCommands implements CommandExecutor {
@@ -27,8 +29,17 @@ public class PluginCommands implements CommandExecutor {
     File scoreFile = new File(Bukkit.getPluginsFolder() + "/animalcapture", "scores.yml");
     FileConfiguration data = YamlConfiguration.loadConfiguration(scoreFile);
 
-    int redScore = data.getInt("redScore") == 0 ? 0 : data.getInt("redScore");
-    int blueScore = data.getInt("blueScore") == 0 ? 0 : data.getInt("blueScore");
+    int redScore = data.getInt("redScore");
+    int blueScore = data.getInt("blueScore");
+
+    private int getScore(String team) {
+        if (team.equalsIgnoreCase("red")) return data.getInt("redScore");
+        if (team.equalsIgnoreCase("blue")) return data.getInt("blueScore");
+        else {
+            logger.warning("Invalid team name: " + team);
+            return 0;
+        }
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
@@ -36,6 +47,7 @@ public class PluginCommands implements CommandExecutor {
 
         if (command.getName().equalsIgnoreCase("captureinit") && (commandSender.hasPermission("arenapvp.arenainit") || commandSender.isOp())) {
             World world = player.getWorld();
+            world.setSpawnFlags(true, true);
             world.setGameRule(GameRule.KEEP_INVENTORY, true);
             world.setPVP(false);
             Objective captured = player.getScoreboard().getObjective("captured");
@@ -87,7 +99,7 @@ public class PluginCommands implements CommandExecutor {
             return true;
         }
 
-        if (command.getName().equalsIgnoreCase("capturestart") && (commandSender.hasPermission("animalcapture.capturestop") || commandSender.isOp())) {
+        if (command.getName().equalsIgnoreCase("capturestart") && (commandSender.hasPermission("animalcapture.capturestart") || commandSender.isOp())) {
             // Disable command output
             ConsoleCommandSender console = Bukkit.getConsoleSender();
             console.sendMessage("Starting the game...");
@@ -136,7 +148,8 @@ public class PluginCommands implements CommandExecutor {
             for (Player p : onlinePlayers) {
                 if (!p.getScoreboardTags().contains("admin") || p.isOp()) {
                     if (!p.getPassengers().isEmpty()) {
-                        p.getPassengers().clear();
+                        Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
+                        p.getPassengers().remove(mob);
                     }
                     p.setRespawnLocation(new Location(world, -90, 0, 69));
                     p.getInventory().clear();
@@ -176,11 +189,6 @@ public class PluginCommands implements CommandExecutor {
             return true;
         }
 
-        BukkitTask scoreCheck = Bukkit.getServer().getScheduler().runTaskAsynchronously(AnimalCapture.getPlugin(AnimalCapture.class), () -> {
-            redScore = data.getInt("redScore");
-            blueScore = data.getInt("blueScore");
-        });
-
         if (command.getName().equalsIgnoreCase("captureannounce") && (commandSender.hasPermission("animalcapture.captureannounce") || commandSender.isOp())) {
             Objective captured = player.getScoreboard().getObjective("captured");
             if (captured == null) {
@@ -188,15 +196,15 @@ public class PluginCommands implements CommandExecutor {
                 return false;
             }
 
-            logger.info("Red Score: " + redScore);
-            logger.info("Blue Score: " + blueScore);
+            logger.info("Red Score: " + getScore("red"));
+            logger.info("Blue Score: " + getScore("blue"));
 
-            if (redScore > blueScore) {
+            if (getScore("red") > getScore("blue")) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.showTitle(Title.title(Component.text("§4The §lRed Team §rhas won!", NamedTextColor.RED), Component.text("§l" + redScore + "§r points!", NamedTextColor.WHITE)));
                 }
                 Bukkit.broadcastMessage("The §lRed Team §rhas won the game with §l" + redScore + " points!");
-            } else if (blueScore > redScore) {
+            } else if (getScore("blue") > getScore("red")) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.showTitle(Title.title(Component.text("§1The §lBlue Team §rhas won!", NamedTextColor.BLUE), Component.text("§l" + blueScore + "§r points!", NamedTextColor.WHITE)));
                 }
