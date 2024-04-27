@@ -8,37 +8,121 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.scoreboard.Criteria;
+import org.bukkit.entity.*;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import java.util.Arrays;
 import java.util.Objects;
-import java.util.logging.Logger;
+//import java.util.logging.Logger;
 
 public class PluginCommands implements CommandExecutor {
 
-    Logger logger = Logger.getLogger("AnimalCapture");
+//    Logger logger = Logger.getLogger("AnimalCapture");
 
-    File scoreFile = new File(Bukkit.getPluginsFolder() + "/animalcapture", "scores.yml");
-    FileConfiguration data = YamlConfiguration.loadConfiguration(scoreFile);
+    String[] clydeLocation = { "-91", "-52", "75" };
 
-    int redScore = data.getInt("redScore");
-    int blueScore = data.getInt("blueScore");
+    String[][] mobList = {
+            { "mushroom_cow", "-136", "-50", "75" },
+            { "polar_bear", "-68", "-52", "75" },
+            { "chicken", "-151", "-52", "53" },
+            { "iron_golem", "-115", "-52", "114" },
+            { "sheep", "-154", "-52", "74" },
+            { "zombified_piglin", "-100", "-52", "95" },
+            { "skeleton", "-90", "-52", "110" },
+            { "horse", "-57", "-52", "133" },
+            { "turtle", "-101", "-52", "56" },
+            { "slime", "-67", "-51", "113" },
+            { "strider", "-58", "-53", "93" },
+            { "zoglin", "-79", "-52", "91" },
+            { "pig", "-124", "-52", "125" },
+            { "cow", "-35", "-52", "89" },
+            { "wolf", "-91", "-52", "37" },
+            { "pillager", "-131", "-52", "109" },
+            { "sniffer", "-103", "-52", "133" },
+            { "donkey", "-79", "-52", "132" },
+            { "glow_squid", "-45", "-51", "112" },
+            { "camel", "-34", "-52", "54" },
+            { "axolotl", "-126", "-52", "96" },
+            { "panda", "-121", "-52", "19" },
+            { "ocelot", "-148", "-52", "91" },
+            { "rabbit", "-27", "-51", "72" },
+            { "fox", "-59", "-52", "56" },
+            { "snowman", "-48", "-52", "73" },
+            { "skeleton_horse", "-125", "-51", "54" },
+            { "goat", "-135", "-52", "34" },
+            { "trader_llama", "-68", "-52", "34" },
+            { "dolphin", "-50", "-52", "32" },
+            { "squid", "-80", "-52", "55" },
+            { "llama", "-58", "-52", "15" },
+            { "zombie", "-103", "-52", "17" },
+            { "zombie_villager", "-76", "-52", "20" },
+            { "spider", "-115", "-52", "35" },
+            { "mule", "-111", "-52", "73" }
+    };
 
-    private int getScore(String team) {
-        if (team.equalsIgnoreCase("red")) return data.getInt("redScore");
-        if (team.equalsIgnoreCase("blue")) return data.getInt("blueScore");
-        else {
-            logger.warning("Invalid team name: " + team);
-            return 0;
+    private void removeMobs(World world) {
+        Entity[] entities = world.getEntities().toArray(new Entity[0]);
+        for (Entity e : entities) {
+            if (e instanceof Player) continue;
+            e.remove();
+        }
+    }
+
+    private void spawnMobs(Player player) {
+        if (Bukkit.getServer().getOnlinePlayers().isEmpty()) return;
+        World world = player.getWorld();
+//        logger.info("Got world");
+
+        for (String[] mobArray : mobList) {
+//            logger.info("Mob array: " + Arrays.toString(mobArray));
+            String mobName = mobArray[0];
+            String x = mobArray[1];
+            String y = mobArray[2];
+            String z = mobArray[3];
+            if (mobName.isEmpty() || x.isEmpty() || y.isEmpty() || z.isEmpty()) continue;
+            Location mobLocation = new Location(world, Double.parseDouble(x), Double.parseDouble(y), Double.parseDouble(z));
+            EntityType found = null;
+            for (EntityType type : EntityType.values()) {
+                if (type.name().equalsIgnoreCase(mobName)) {
+//                    logger.info("Found entity type " + type.name().toLowerCase() + " for mob " + mobName);
+                    found = type;
+                    break;
+                }
+            }
+            if (found == null) continue;
+            EntityType finalFound = found;
+            int mobCount = (int) world.getEntities().stream().filter(entity -> entity.getType() == finalFound).count();
+            for (int i = 2; mobCount < i; mobCount++) {
+                LivingEntity mob = (LivingEntity) world.spawnEntity(mobLocation, found);
+//                logger.info("Spawned entity " + found.name().toLowerCase() + " at " + x + ", " + y + ", " + z);
+                mob.setInvulnerable(true);
+                mob.setPersistent(true);
+                mob.setRemoveWhenFarAway(false);
+                if (mob instanceof Animals animal) {
+                    animal.setInvulnerable(true);
+                    animal.setAggressive(false);
+                }
+                if (mob instanceof Mob mobEntity) {
+                    mobEntity.setInvulnerable(true);
+                    mobEntity.setAggressive(false);
+                    mobEntity.setTarget(null);
+                }
+            }
+        }
+    }
+
+    private void spawnClyde(Player player) {
+        if (Bukkit.getServer().getOnlinePlayers().isEmpty()) return;
+        String x = clydeLocation[0];
+        String y = clydeLocation[1];
+        String z = clydeLocation[2];
+        World world = player.getWorld();
+        EntityType clydeType = EntityType.FROG;
+        int clydeCount = (int) world.getEntities().stream().filter(entity -> entity.getType() == clydeType).count();
+        for (int i = 1; clydeCount < i; clydeCount++) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon frog " + " " + x + " " + y + " " + z + " {Invulnerable:1b,CustomNameVisible:1b,PersistenceRequired:1b,variant:\"minecraft:temperate\",CustomName:'{\"bold\":true,\"color\":\"gold\",\"text\":\"Clyde\"}'}");
         }
     }
 
@@ -46,8 +130,11 @@ public class PluginCommands implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
         if (!(commandSender instanceof Player player)) return false;
 
-        if (command.getName().equalsIgnoreCase("captureinit") && (commandSender.hasPermission("arenapvp.arenainit") || commandSender.isOp())) {
+        if (command.getName().equalsIgnoreCase("captureinit") && (commandSender.hasPermission("arenapvp.captureinit") || commandSender.isOp())) {
             World world = player.getWorld();
+            removeMobs(world);
+            world.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false);
+            world.setGameRule(GameRule.COMMAND_BLOCK_OUTPUT, false);
             world.setSpawnFlags(true, true);
             world.setGameRule(GameRule.KEEP_INVENTORY, true);
             world.setPVP(false);
@@ -58,33 +145,28 @@ public class PluginCommands implements CommandExecutor {
                 player.sendMessage("Score objectives already exist, did you reset them?");
                 return false;
             }
-//            logger.info("Initializing arena...");
             Team redTeam = player.getScoreboard().getTeam("red");
             Team blueTeam = player.getScoreboard().getTeam("blue");
-//            logger.info("Getting teams...");
             if (redTeam == null) redTeam = player.getScoreboard().registerNewTeam("red");
             if (blueTeam == null) blueTeam = player.getScoreboard().registerNewTeam("blue");
-//            logger.info("Got teams");
             redTeam.displayName(Component.text("Red Team", NamedTextColor.RED));
             blueTeam.displayName(Component.text("Blue Team", NamedTextColor.BLUE));
-//            logger.info("Set team display names");
             redTeam.setAllowFriendlyFire(false);
             blueTeam.setAllowFriendlyFire(false);
-//            logger.info("Set team friendly fire");
             redTeam.color(NamedTextColor.RED);
             blueTeam.color(NamedTextColor.BLUE);
-//            logger.info("Set team colors");
             Player[] players = player.getServer().getOnlinePlayers().toArray(new Player[0]);
-//            logger.info("Got players");
             int playerCount = players.length;
             int halfPlayerCount = playerCount / 2;
-//            logger.info("Got player count and half player count");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add redScore dummy \"Red Score\"");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add blueScore dummy \"Blue Score\"");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add captured dummy \"Mobs Captured\"");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar captured");
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay below_name captured");
+            spawnMobs(player);
+            spawnClyde(player);
             for (Player p : players) {
-                if (p.getScoreboardTags().contains("admin") || (p.getName().equalsIgnoreCase("Yrrah908") || p.getName().equalsIgnoreCase("Wenzo") || p.isOp())) continue;
+                if (p.getScoreboardTags().contains("admin")/* || (p.getName().equalsIgnoreCase("Yrrah908") || p.getName().equalsIgnoreCase("_wenzo") || p.isOp())*/) continue;
                 p.setGameMode(GameMode.SURVIVAL);
                 if (redTeam.getSize() < blueTeam.getSize()) {
                     redTeam.addEntry(p.getName());
@@ -97,15 +179,12 @@ public class PluginCommands implements CommandExecutor {
                 } else {
                     redTeam.addEntry(p.getName());
                 }
-//                logger.info("Added player " + p.getName() + " to team " + (p.getScoreboard().getEntityTeam(p).getName()) + ".");
             }
-//            logger.info("Arena initialized!");
             player.sendMessage("Initialised the plugin, do /capturestart to start the game!");
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("capturestart") && (commandSender.hasPermission("animalcapture.capturestart") || commandSender.isOp())) {
-            // Disable command output
             ConsoleCommandSender console = Bukkit.getConsoleSender();
             console.sendMessage("Starting the game...");
             World world = player.getWorld();
@@ -129,7 +208,6 @@ public class PluginCommands implements CommandExecutor {
                 p.setGameMode(GameMode.SURVIVAL);
             }
 
-            // Teleport players to their respective spawn points
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "spawnpoint @a[team=blue] -172 -47 73");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "spawnpoint @a[team=red] -10 -47 73");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "tp @a[team=blue] -172 -47 73");
@@ -150,8 +228,9 @@ public class PluginCommands implements CommandExecutor {
             blueTeam.unregister();
             Player[] onlinePlayers = player.getServer().getOnlinePlayers().toArray(new Player[0]);
             world.setSpawnLocation(new Location(world, -90, 0, 69));
+            removeMobs(world);
             for (Player p : onlinePlayers) {
-                if (!p.getScoreboardTags().contains("admin") || p.isOp()) {
+                if (!p.getScoreboardTags().contains("admin")/* || p.isOp()*/) {
                     if (!p.getPassengers().isEmpty()) {
                         Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
                         p.getPassengers().remove(mob);
@@ -177,26 +256,9 @@ public class PluginCommands implements CommandExecutor {
                 player.sendMessage("Scoreboard objectives do not exist, have you reset already?");
                 return false;
             }
-            redScore = 0;
-            blueScore = 0;
-            data.set("redScore", redScore);
-            data.set("blueScore", blueScore);
-            try {
-                data.save(scoreFile);
-                logger.info("Reset scores to 0.");
-                logger.info("Red Score: " + data.getInt("redScore"));
-                logger.info("Blue Score: " + data.getInt("blueScore"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove redScore");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove blueScore");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove captured");
-//            redTeamScore.getScore("").setScore(0);
-//            blueTeamScore.getScore("").setScore(0);
-//            redTeamScore.unregister();
-//            blueTeamScore.unregister();
-//            captured.unregister();
             player.sendMessage("Reset the scoreboard and total scores.");
             return true;
         }
@@ -213,21 +275,19 @@ public class PluginCommands implements CommandExecutor {
             int redTeamScoreVal = redTeamScore.getScore("").getScore();
             int blueTeamScoreVal = blueTeamScore.getScore("").getScore();
 
-            logger.info("Red Score: " + getScore("red"));
-            logger.info("Red OBJ Score " + redTeamScore.getScore("").getScore());
-            logger.info("Blue Score: " + getScore("blue"));
-            logger.info("Blue OBJ Score " + blueTeamScore.getScore("").getScore());
+//            logger.info("Red Score " + redTeamScore.getScore("").getScore());
+//            logger.info("Blue Score " + blueTeamScore.getScore("").getScore());
 
             if (redTeamScoreVal > blueTeamScoreVal) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.showTitle(Title.title(Component.text("§4The §lRed Team §rhas won!", NamedTextColor.RED), Component.text("§l" + redTeamScoreVal + "§r§4 points!", NamedTextColor.WHITE)));
+                    p.showTitle(Title.title(Component.text("The §4§lRed §rteam has won!", NamedTextColor.RED), Component.text("§l" + redTeamScoreVal + "§r§4 points!", NamedTextColor.WHITE)));
                 }
-                Bukkit.broadcastMessage("The §lRed Team §rhas won the game with §l" + redTeamScoreVal + " points!");
+                Bukkit.broadcastMessage("The §4§lRed §rteam has won the game with §l" + redTeamScoreVal + " points!");
             } else if (blueTeamScoreVal > redTeamScoreVal) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.showTitle(Title.title(Component.text("§1The §lBlue Team §rhas won!", NamedTextColor.BLUE), Component.text("§l" + blueTeamScoreVal + "§r§1 points!", NamedTextColor.WHITE)));
+                    p.showTitle(Title.title(Component.text("The §1§lBlue §rteam has won!", NamedTextColor.BLUE), Component.text("§l" + blueTeamScoreVal + "§r§1 points!", NamedTextColor.WHITE)));
                 }
-                Bukkit.broadcastMessage("The §lBlue Team §rhas won the game with §l" + blueTeamScoreVal + " points!");
+                Bukkit.broadcastMessage("The §1§lBlue §rteam has won the game with §l" + blueTeamScoreVal + " points!");
             } else {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.showTitle(Title.title(Component.text("§eThe game has ended in a draw!", NamedTextColor.YELLOW), Component.text("§l" + redTeamScoreVal + "§r§e points each!", NamedTextColor.WHITE)));

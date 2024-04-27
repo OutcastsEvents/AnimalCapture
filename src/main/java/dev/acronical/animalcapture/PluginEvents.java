@@ -5,38 +5,31 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Team;
 
-import java.io.File;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.logging.Logger;
+//import java.util.logging.Logger;
 
 public class PluginEvents implements Listener {
 
-    Logger logger = Logger.getLogger("AnimalCapture");
+//    Logger logger = Logger.getLogger("AnimalCapture");
 
-    File scoreFile = new File(Bukkit.getPluginsFolder() + "/animalcapture", "scores.yml");
-    FileConfiguration data = YamlConfiguration.loadConfiguration(scoreFile);
-
-    public int redScore = data.getInt("redScore") == 0 ? 0 : data.getInt("redScore");
-    public int blueScore = data.getInt("blueScore") == 0 ? 0 : data.getInt("blueScore");
+    String[] clydeLocation = { "-91", "-52", "75" };
 
     String[][] mobList = {
             { "mushroom_cow", "-136", "-50", "75" },
@@ -72,28 +65,18 @@ public class PluginEvents implements Listener {
             { "squid", "-80", "-52", "55" },
             { "llama", "-58", "-52", "15" },
             { "zombie", "-103", "-52", "17" },
-            { "frog", "-76", "-52", "20" },
+            { "zombie_villager", "-76", "-52", "20" },
             { "spider", "-115", "-52", "35" },
             { "mule", "-111", "-52", "73" }
     };
-    /*
-         ! Logic to respawn mobs every 2 minutes
-         * Respawn mobs at their respective locations
-         * Use MobList to get the mob name and coordinates
-         * Use the coordinates to spawn the mob at the location
-         * Use the mob name to get the mob type
-         * Use the mob type to spawn the mob
-         ! Only two mobs of each type can be in the world at a time
-         ! Entities must be invulnerable and non-aggressive
-     */
 
     public BukkitTask summonTask = Bukkit.getServer().getScheduler().runTaskTimer(AnimalCapture.getPlugin(AnimalCapture.class), () -> {
         if (Bukkit.getServer().getOnlinePlayers().isEmpty()) return;
         World world = Objects.requireNonNull(Bukkit.getServer().getOnlinePlayers().stream().findFirst().orElse(null)).getWorld();
-        logger.info("Got world");
+//        logger.info("Got world");
 
         for (String[] mobArray : mobList) {
-            logger.info("Mob array: " + Arrays.toString(mobArray));
+//            logger.info("Mob array: " + Arrays.toString(mobArray));
             String mobName = mobArray[0];
             String x = mobArray[1];
             String y = mobArray[2];
@@ -103,7 +86,7 @@ public class PluginEvents implements Listener {
             EntityType found = null;
             for (EntityType type : EntityType.values()) {
                 if (type.name().equalsIgnoreCase(mobName)) {
-                    logger.info("Found entity type " + type.name().toLowerCase() + " for mob " + mobName);
+//                    logger.info("Found entity type " + type.name().toLowerCase() + " for mob " + mobName);
                     found = type;
                     break;
                 }
@@ -113,7 +96,7 @@ public class PluginEvents implements Listener {
             int mobCount = (int) world.getEntities().stream().filter(entity -> entity.getType() == finalFound).count();
             for (int i = 2; mobCount < i; mobCount++) {
                 LivingEntity mob = (LivingEntity) world.spawnEntity(mobLocation, found);
-                logger.info("Spawned entity " + found.name().toLowerCase() + " at " + x + ", " + y + ", " + z);
+//                logger.info("Spawned entity " + found.name().toLowerCase() + " at " + x + ", " + y + ", " + z);
                 mob.setInvulnerable(true);
                 mob.setPersistent(true);
                 mob.setRemoveWhenFarAway(false);
@@ -130,12 +113,29 @@ public class PluginEvents implements Listener {
         }
     }, 0L, 2400L);
 
-    /*
-         ! Logic for point scoring
-         * Score when player has passengers and is on their team's block
-         * Add score to player scoreboard and use variables in this file to have the total score
-         ! Variable must be publicly accessible from PluginCommands
-     */
+    public BukkitTask clydeTask = Bukkit.getServer().getScheduler().runTaskTimer(AnimalCapture.getPlugin(AnimalCapture.class), () -> {
+        if (Bukkit.getServer().getOnlinePlayers().isEmpty()) return;
+        String x = clydeLocation[0];
+        String y = clydeLocation[1];
+        String z = clydeLocation[2];
+        World world = Objects.requireNonNull(Bukkit.getServer().getOnlinePlayers().stream().findFirst().orElse(null)).getWorld();
+        EntityType clydeType = EntityType.FROG;
+        int clydeCount = (int) world.getEntities().stream().filter(entity -> entity.getType() == clydeType).count();
+        for (int i = 1; clydeCount < i; clydeCount++) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon frog " + " " + x + " " + y + " " + z + " {Invulnerable:1b,CustomNameVisible:1b,PersistenceRequired:1b,variant:\"minecraft:temperate\",CustomName:'{\"bold\":true,\"color\":\"gold\",\"text\":\"Clyde\"}'}");
+            Bukkit.broadcastMessage("§6Clyde has been respawned!");
+        }
+    }, 0L, 6000L);
+
+    public BukkitTask slowTask = Bukkit.getServer().getScheduler().runTaskTimer(AnimalCapture.getPlugin(AnimalCapture.class), () -> {
+        if (Bukkit.getServer().getOnlinePlayers().isEmpty()) return;
+        for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+            if (player.getPassengers().isEmpty()) continue;
+            Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
+            if (mob == null) continue;
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1, true, true, false));
+        }
+    }, 0L, 20L);
 
     public BukkitTask scoreTask = Bukkit.getServer().getScheduler().runTaskTimer(AnimalCapture.getPlugin(AnimalCapture.class), () -> {
         if (Bukkit.getServer().getOnlinePlayers().isEmpty()) return;
@@ -143,24 +143,66 @@ public class PluginEvents implements Listener {
         for (Player player : Bukkit.getServer().getOnlinePlayers()) {
             Team redTeam = player.getScoreboard().getTeam("red");
             Team blueTeam = player.getScoreboard().getTeam("blue");
-            if (redTeam == null || blueTeam == null) continue;
+            Objective redTeamScore = player.getScoreboard().getObjective("redScore");
+            Objective blueTeamScore = player.getScoreboard().getObjective("blueScore");
+            if (redTeam == null || blueTeam == null || redTeamScore == null || blueTeamScore == null) continue;
+            int redTeamScoreVal = redTeamScore.getScore("").getScore();
+            int blueTeamScoreVal = blueTeamScore.getScore("").getScore();
             World world = player.getWorld();
             Location playerLocation = player.getLocation();
             Location belowPlayer = playerLocation.clone().subtract(0, 1, 0);
             if (player.getPassengers().isEmpty()) continue;
             Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
             if (mob == null) continue;
+            if (mob.getType().equals(EntityType.FROG)) {
+                if (redTeam.hasEntry(player.getName())) {
+                    if (belowPlayer.getBlock().getType() == Material.REDSTONE_BLOCK) {
+                        redTeamScoreVal = redTeamScoreVal + 10;
+                        int finalRedTeamScoreVal = redTeamScoreVal;
+                        player.getScoreboard().getObjectives().forEach(objective -> {
+                            if (objective.getName().equalsIgnoreCase("captured")) {
+                                int tempRed = objective.getScoreFor(player).getScore();
+                                tempRed++;
+                                objective.getScore(player.getName()).setScore(tempRed);
+                            }
+                            if (objective.getName().equalsIgnoreCase("redscore")) {
+                                objective.getScore("").setScore(finalRedTeamScoreVal);
+                            }
+                        });
+                        player.teleport(new Location(world, -10, -47, 73));
+                        player.removePassenger(mob);
+                        mob.remove();
+                        player.sendMessage("§2You have scored a point for the §4§lRED§r§2 team!");
+                        Bukkit.broadcastMessage("§4§lRED§r team has scored 10 points with §e§lClyde!");
+                        continue;
+                    }
+                } else if (blueTeam.hasEntry(player.getName())) {
+                    if (belowPlayer.getBlock().getType() == Material.LAPIS_BLOCK) {
+                        blueTeamScoreVal = blueTeamScoreVal + 10;
+                        int finalBlueTeamScoreVal = blueTeamScoreVal;
+                        player.getScoreboard().getObjectives().forEach(objective -> {
+                            if (objective.getName().equalsIgnoreCase("captured")) {
+                                int tempBlue = objective.getScoreFor(player).getScore();
+                                tempBlue++;
+                                objective.getScore(player.getName()).setScore(tempBlue);
+                            }
+                            if (objective.getName().equalsIgnoreCase("bluescore")) {
+                                objective.getScore("").setScore(finalBlueTeamScoreVal);
+                            }
+                        });
+                        player.teleport(new Location(world, -172, -47, 73));
+                        player.removePassenger(mob);
+                        mob.remove();
+                        player.sendMessage("§2You have scored a point for the §1§lBLUE§r§2 team!");
+                        Bukkit.broadcastMessage("§1§lBLUE§r team has scored 10 points with §e§lClyde!");
+                        continue;
+                    }
+                }
+            }
             if (redTeam.hasEntry(player.getName())) {
                 if (belowPlayer.getBlock().getType() == Material.REDSTONE_BLOCK) {
-                    redScore++;
-                    data.set("redScore", redScore);
-                    try {
-                        data.save(scoreFile);
-                        logger.info("Saved score data");
-                        logger.info("Red score: " + data.getInt("redScore"));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    redTeamScoreVal++;
+                    int finalRedTeamScoreVal = redTeamScoreVal;
                     player.getScoreboard().getObjectives().forEach(objective -> {
                         if (objective.getName().equalsIgnoreCase("captured")) {
                             int tempRed = objective.getScoreFor(player).getScore();
@@ -168,7 +210,7 @@ public class PluginEvents implements Listener {
                             objective.getScore(player.getName()).setScore(tempRed);
                         }
                         if (objective.getName().equalsIgnoreCase("redscore")) {
-                            objective.getScore("").setScore(redScore);
+                            objective.getScore("").setScore(finalRedTeamScoreVal);
                         }
                     });
                     player.teleport(new Location(world, -10, -47, 73));
@@ -179,15 +221,8 @@ public class PluginEvents implements Listener {
                 }
             } else if (blueTeam.hasEntry(player.getName())) {
                 if (belowPlayer.getBlock().getType() == Material.LAPIS_BLOCK) {
-                    blueScore++;
-                    data.set("blueScore", blueScore);
-                    try {
-                        data.save(scoreFile);
-                        logger.info("Saved score data");
-                        logger.info("Blue score: " + data.getInt("blueScore"));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    blueTeamScoreVal++;
+                    int finalBlueTeamScoreVal = blueTeamScoreVal;
                     player.getScoreboard().getObjectives().forEach(objective -> {
                         if (objective.getName().equalsIgnoreCase("captured")) {
                             int tempBlue = objective.getScoreFor(player).getScore();
@@ -195,7 +230,7 @@ public class PluginEvents implements Listener {
                             objective.getScore(player.getName()).setScore(tempBlue);
                         }
                         if (objective.getName().equalsIgnoreCase("bluescore")) {
-                            objective.getScore("").setScore(blueScore);
+                            objective.getScore("").setScore(finalBlueTeamScoreVal);
                         }
                     });
                     player.teleport(new Location(world, -172, -47, 73));
@@ -215,6 +250,13 @@ public class PluginEvents implements Listener {
     }
 
     @EventHandler
+    public void onSnowmanPlaceSnow(EntityBlockFormEvent e) {
+        if (e.getEntity() instanceof Snowman) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
         World world = player.getWorld();
@@ -222,18 +264,22 @@ public class PluginEvents implements Listener {
         int halfPlayerCount = playerCount / 2;
         Team redTeam = player.getScoreboard().getTeam("red");
         Team blueTeam = player.getScoreboard().getTeam("blue");
-        if (redTeam == null || blueTeam == null) return;
-        if (player.getScoreboardTags().contains("admin")) return;
-        if (player.getName().equalsIgnoreCase("Yrrah908") || player.getName().equalsIgnoreCase("Wenzo") || player.isOp()) return;
-        if (redTeam.hasEntry(player.getName())) {
-            player.teleportAsync(new Location(world, -10, -47, 73));
-            player.setRespawnLocation(new Location(world, -10, -47, 73));
-        } else if (blueTeam.hasEntry(player.getName())) {
-            player.teleportAsync(new Location(world, -172, -47, 73));
-            player.setRespawnLocation(new Location(world, -172, -47, 73));
+        if (redTeam == null || blueTeam == null) {
+            player.setRespawnLocation(new Location(world, -90, 0, 69));
+            player.teleport(new Location(world, -90, 0, 69));
+            return;
         }
-        player.setRespawnLocation(new Location(world, -90, 0, 69));
-        player.teleport(new Location(world, -90, 0, 69));
+        if (player.getScoreboardTags().contains("admin")) return;
+//        if (player.getName().equalsIgnoreCase("Yrrah908") || player.getName().equalsIgnoreCase("_wenzo") || player.isOp()) return;
+        if (redTeam.hasEntry(player.getName())) {
+//            player.teleportAsync(new Location(world, -10, -47, 73));
+            player.setRespawnLocation(new Location(world, -10, -47, 73));
+            return;
+        } else if (blueTeam.hasEntry(player.getName())) {
+//            player.teleportAsync(new Location(world, -172, -47, 73));
+            player.setRespawnLocation(new Location(world, -172, -47, 73));
+            return;
+        }
         if (redTeam.getSize() < halfPlayerCount) {
             redTeam.addEntry(player.getName());
             player.teleportAsync(new Location(world, -10, -47, 73));
@@ -280,6 +326,22 @@ public class PluginEvents implements Listener {
     }
 
     @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent e) {
+        Player player = e.getPlayer();
+        World world = player.getWorld();
+        Team redTeam = player.getScoreboard().getTeam("red");
+        Team blueTeam = player.getScoreboard().getTeam("blue");
+        if (redTeam == null || blueTeam == null) return;
+        if (redTeam.hasEntry(player.getName())) {
+            e.setRespawnLocation(new Location(world, -10, -47, 73));
+        } else if (blueTeam.hasEntry(player.getName())) {
+            e.setRespawnLocation(new Location(world, -172, -47, 73));
+        } else {
+            e.setRespawnLocation(new Location(world, -90, 0, 69));
+        }
+    }
+
+    @EventHandler
     public void onAnimalCapture(PlayerInteractEntityEvent e) {
         if (e.getRightClicked() instanceof Player) return;
         Entity entity = e.getRightClicked();
@@ -306,11 +368,10 @@ public class PluginEvents implements Listener {
         }
 
         Entity ridingMob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
-        logger.info("Player interacted with entity");
+//        logger.info("Player interacted with entity");
         if (player.getPassengers().size() == 1 && ridingMob != null) player.removePassenger(ridingMob);
-        logger.info("Mob: " + entity.getName());
-        logger.info("Player: " + player.getName());
-        // ! Make the mob ride the player
+//        logger.info("Mob: " + entity.getName());
+//        logger.info("Player: " + player.getName());
         player.addPassenger(entity);
     }
 
@@ -331,17 +392,19 @@ public class PluginEvents implements Listener {
             e.setCancelled(true);
             return;
         }
-        logger.info("Player damaged");
+//        logger.info("Player damaged");
         if (!(e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK)) e.setCancelled(true);
-        logger.info("Player attacked by entity");
+//        logger.info("Player attacked by entity");
         if (!(e.getDamager() instanceof Player attacker)) {
             e.setCancelled(true);
+            return;
         }
-        logger.info("Player attacked by player");
-        Animals mob = (Animals) player.getPassengers().stream().filter(entity -> entity instanceof Animals).findFirst().orElse(null);
+//        logger.info("Player attacked by player");
+        LivingEntity mob = (LivingEntity) player.getPassengers().stream().filter(entity -> entity instanceof LivingEntity).findFirst().orElse(null);
         if (mob == null) return;
         player.removePassenger(mob);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 50, 255, true, true, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 50, 255, true, true, false));
     }
 
     @EventHandler
@@ -357,6 +420,20 @@ public class PluginEvents implements Listener {
         Team adminTeam = e.getPlayer().getScoreboard().getTeam("admin");
         adminTeam = (adminTeam == null) ? e.getPlayer().getScoreboard().registerNewTeam("admin") : adminTeam;
         if (adminTeam.hasEntry(e.getPlayer().getName())) return;
+        e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent e) {
+        if (e.getPlayer().isOp()) return;
+        Team adminTeam = e.getPlayer().getScoreboard().getTeam("admin");
+        adminTeam = (adminTeam == null) ? e.getPlayer().getScoreboard().registerNewTeam("admin") : adminTeam;
+        if (adminTeam.hasEntry(e.getPlayer().getName())) return;
+        e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockDropItems(BlockDropItemEvent e) {
         e.setCancelled(true);
     }
 }
