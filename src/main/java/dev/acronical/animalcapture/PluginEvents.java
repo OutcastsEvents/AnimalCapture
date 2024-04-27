@@ -163,7 +163,12 @@ public class PluginEvents implements Listener {
                     }
                     player.getScoreboard().getObjectives().forEach(objective -> {
                         if (objective.getName().equalsIgnoreCase("captured")) {
-                            objective.getScore(player.getName()).setScore(redScore);
+                            int tempRed = objective.getScoreFor(player).getScore();
+                            tempRed++;
+                            objective.getScore(player.getName()).setScore(tempRed);
+                        }
+                        if (objective.getName().equalsIgnoreCase("redscore")) {
+                            objective.getScore("").setScore(redScore);
                         }
                     });
                     player.teleport(new Location(world, -10, -47, 73));
@@ -185,7 +190,12 @@ public class PluginEvents implements Listener {
                     }
                     player.getScoreboard().getObjectives().forEach(objective -> {
                         if (objective.getName().equalsIgnoreCase("captured")) {
-                            objective.getScore(player.getName()).setScore(blueScore);
+                            int tempBlue = objective.getScoreFor(player).getScore();
+                            tempBlue++;
+                            objective.getScore(player.getName()).setScore(tempBlue);
+                        }
+                        if (objective.getName().equalsIgnoreCase("bluescore")) {
+                            objective.getScore("").setScore(blueScore);
                         }
                     });
                     player.teleport(new Location(world, -172, -47, 73));

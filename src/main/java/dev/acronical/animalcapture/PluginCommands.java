@@ -14,6 +14,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
@@ -51,8 +52,10 @@ public class PluginCommands implements CommandExecutor {
             world.setGameRule(GameRule.KEEP_INVENTORY, true);
             world.setPVP(false);
             Objective captured = player.getScoreboard().getObjective("captured");
+            Objective redScore = player.getScoreboard().getObjective("redScore");
+            Objective blueScore = player.getScoreboard().getObjective("blueScore");
             if (captured != null) {
-                player.sendMessage("Captured objective already exists, did you reset it?");
+                player.sendMessage("Score objectives already exist, did you reset them?");
                 return false;
             }
 //            logger.info("Initializing arena...");
@@ -76,6 +79,8 @@ public class PluginCommands implements CommandExecutor {
             int playerCount = players.length;
             int halfPlayerCount = playerCount / 2;
 //            logger.info("Got player count and half player count");
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add redScore dummy \"Red Score\"");
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add blueScore dummy \"Blue Score\"");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives add captured dummy \"Mobs Captured\"");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives setdisplay sidebar captured");
             for (Player p : players) {
@@ -166,8 +171,10 @@ public class PluginCommands implements CommandExecutor {
             Team redTeam = player.getScoreboard().getTeam("red");
             Team blueTeam = player.getScoreboard().getTeam("blue");
             Objective captured = player.getScoreboard().getObjective("captured");
-            if (captured == null) {
-                player.sendMessage("Captured objective does not exist, have you reset already?");
+            Objective redTeamScore = player.getScoreboard().getObjective("redScore");
+            Objective blueTeamScore = player.getScoreboard().getObjective("blueScore");
+            if (captured == null || blueTeamScore == null || redTeamScore == null) {
+                player.sendMessage("Scoreboard objectives do not exist, have you reset already?");
                 return false;
             }
             redScore = 0;
@@ -182,36 +189,48 @@ public class PluginCommands implements CommandExecutor {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            player.getScoreboard().resetScores("§4Red Team: " + redScore);
-            player.getScoreboard().resetScores("§1Blue Team: " + blueScore);
-            captured.unregister();
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove redScore");
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove blueScore");
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "scoreboard objectives remove captured");
+//            redTeamScore.getScore("").setScore(0);
+//            blueTeamScore.getScore("").setScore(0);
+//            redTeamScore.unregister();
+//            blueTeamScore.unregister();
+//            captured.unregister();
             player.sendMessage("Reset the scoreboard and total scores.");
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("captureannounce") && (commandSender.hasPermission("animalcapture.captureannounce") || commandSender.isOp())) {
             Objective captured = player.getScoreboard().getObjective("captured");
-            if (captured == null) {
-                player.sendMessage("Captured objective does not exist, have you reset already?");
+            Objective redTeamScore = player.getScoreboard().getObjective("redScore");
+            Objective blueTeamScore = player.getScoreboard().getObjective("blueScore");
+            if (captured == null || blueTeamScore == null || redTeamScore == null) {
+                player.sendMessage("Scoreboard objectives do not exist, have you initialised?");
                 return false;
             }
 
-            logger.info("Red Score: " + getScore("red"));
-            logger.info("Blue Score: " + getScore("blue"));
+            int redTeamScoreVal = redTeamScore.getScore("").getScore();
+            int blueTeamScoreVal = blueTeamScore.getScore("").getScore();
 
-            if (getScore("red") > getScore("blue")) {
+            logger.info("Red Score: " + getScore("red"));
+            logger.info("Red OBJ Score " + redTeamScore.getScore("").getScore());
+            logger.info("Blue Score: " + getScore("blue"));
+            logger.info("Blue OBJ Score " + blueTeamScore.getScore("").getScore());
+
+            if (redTeamScoreVal > blueTeamScoreVal) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.showTitle(Title.title(Component.text("§4The §lRed Team §rhas won!", NamedTextColor.RED), Component.text("§l" + redScore + "§r points!", NamedTextColor.WHITE)));
+                    p.showTitle(Title.title(Component.text("§4The §lRed Team §rhas won!", NamedTextColor.RED), Component.text("§l" + redTeamScoreVal + "§r§4 points!", NamedTextColor.WHITE)));
                 }
-                Bukkit.broadcastMessage("The §lRed Team §rhas won the game with §l" + redScore + " points!");
-            } else if (getScore("blue") > getScore("red")) {
+                Bukkit.broadcastMessage("The §lRed Team §rhas won the game with §l" + redTeamScoreVal + " points!");
+            } else if (blueTeamScoreVal > redTeamScoreVal) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.showTitle(Title.title(Component.text("§1The §lBlue Team §rhas won!", NamedTextColor.BLUE), Component.text("§l" + blueScore + "§r points!", NamedTextColor.WHITE)));
+                    p.showTitle(Title.title(Component.text("§1The §lBlue Team §rhas won!", NamedTextColor.BLUE), Component.text("§l" + blueTeamScoreVal + "§r§1 points!", NamedTextColor.WHITE)));
                 }
-                Bukkit.broadcastMessage("The §lBlue Team §rhas won the game with §l" + blueScore + " points!");
+                Bukkit.broadcastMessage("The §lBlue Team §rhas won the game with §l" + blueTeamScoreVal + " points!");
             } else {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.showTitle(Title.title(Component.text("§eThe game has ended in a draw!", NamedTextColor.YELLOW), Component.text("§l" + redScore + "§r points each!", NamedTextColor.WHITE)));
+                    p.showTitle(Title.title(Component.text("§eThe game has ended in a draw!", NamedTextColor.YELLOW), Component.text("§l" + redTeamScoreVal + "§r§e points each!", NamedTextColor.WHITE)));
                 }
                 Bukkit.broadcastMessage("§eThe game has ended in a draw!");
             }
