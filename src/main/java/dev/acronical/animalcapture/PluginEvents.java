@@ -123,7 +123,7 @@ public class PluginEvents implements Listener {
         int clydeCount = (int) world.getEntities().stream().filter(entity -> entity.getType() == clydeType).count();
         for (int i = 1; clydeCount < i; clydeCount++) {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon frog " + " " + x + " " + y + " " + z + " {Invulnerable:1b,CustomNameVisible:1b,PersistenceRequired:1b,variant:\"minecraft:temperate\",CustomName:'{\"bold\":true,\"color\":\"gold\",\"text\":\"Clyde\"}'}");
-            Bukkit.broadcastMessage("§6Clyde has been respawned!");
+            Bukkit.broadcastMessage("§6Clyde has respawned!");
         }
     }, 0L, 6000L);
 
@@ -133,6 +133,7 @@ public class PluginEvents implements Listener {
             if (player.getPassengers().isEmpty()) continue;
             Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
             if (mob == null) continue;
+            if (mob.getType().equals(EntityType.FROG)) player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 30, 1, true, true, false));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1, true, true, false));
         }
     }, 0L, 20L);
@@ -173,7 +174,7 @@ public class PluginEvents implements Listener {
                         player.removePassenger(mob);
                         mob.remove();
                         player.sendMessage("§2You have scored a point for the §4§lRED§r§2 team!");
-                        Bukkit.broadcastMessage("§4§lRED§r team has scored 10 points with §e§lClyde!");
+                        Bukkit.broadcastMessage(player.getName() + " has scored §4§lRED§r team 10 points with §e§lClyde!");
                         continue;
                     }
                 } else if (blueTeam.hasEntry(player.getName())) {
@@ -194,7 +195,7 @@ public class PluginEvents implements Listener {
                         player.removePassenger(mob);
                         mob.remove();
                         player.sendMessage("§2You have scored a point for the §1§lBLUE§r§2 team!");
-                        Bukkit.broadcastMessage("§1§lBLUE§r team has scored 10 points with §e§lClyde!");
+                        Bukkit.broadcastMessage(player.getName() + " has scored §1§lBLUE§r team 10 points with §e§lClyde!");
                         continue;
                     }
                 }
@@ -217,7 +218,7 @@ public class PluginEvents implements Listener {
                     player.removePassenger(mob);
                     mob.remove();
                     player.sendMessage("§2You have scored a point for the §4§lRED§r§2 team!");
-                    Bukkit.broadcastMessage("§4§lRED§r team has scored a point!");
+                    Bukkit.broadcastMessage(player.getName() + " has scored §4§lRED§r team a point!");
                 }
             } else if (blueTeam.hasEntry(player.getName())) {
                 if (belowPlayer.getBlock().getType() == Material.LAPIS_BLOCK) {
@@ -237,7 +238,7 @@ public class PluginEvents implements Listener {
                     player.removePassenger(mob);
                     mob.remove();
                     player.sendMessage("§2You have scored a point for the §1§lBLUE§r§2 team!");
-                    Bukkit.broadcastMessage("§1§lBLUE§r team has scored a point!");
+                    Bukkit.broadcastMessage(player.getName() + " has scored §1§lBLUE§r a point!");
                 }
             }
         }

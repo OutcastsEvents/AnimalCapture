@@ -220,6 +220,7 @@ public class PluginCommands implements CommandExecutor {
             world.setPVP(false);
             Team redTeam = player.getScoreboard().getTeam("red");
             Team blueTeam = player.getScoreboard().getTeam("blue");
+            Team adminTeam = player.getScoreboard().getTeam("admin");
             if (redTeam == null || blueTeam == null) {
                 player.sendMessage("Teams do not exist, have you finished a game or initialised the plugin?");
                 return false;
@@ -230,16 +231,16 @@ public class PluginCommands implements CommandExecutor {
             world.setSpawnLocation(new Location(world, -90, 0, 69));
             removeMobs(world);
             for (Player p : onlinePlayers) {
-                if (!p.getScoreboardTags().contains("admin")/* || p.isOp()*/) {
-                    if (!p.getPassengers().isEmpty()) {
-                        Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
-                        p.getPassengers().remove(mob);
-                    }
-                    p.setRespawnLocation(new Location(world, -90, 0, 69));
-                    p.getInventory().clear();
-                    p.teleportAsync(new Location(world, -90, 0, 69));
-                    p.setGameMode(GameMode.SURVIVAL);
+                if (adminTeam != null && adminTeam.hasEntry(p.getName())/* || p.isOp()*/) continue;
+                if (!p.getPassengers().isEmpty()) {
+                    Entity mob = player.getPassengers().stream().filter(Objects::nonNull).findFirst().orElse(null);
+                    p.getPassengers().remove(mob);
                 }
+                p.setRespawnLocation(new Location(world, -90, 0, 69));
+                p.getInventory().clear();
+                p.teleportAsync(new Location(world, -90, 0, 69));
+                p.setGameMode(GameMode.SURVIVAL);
+
             }
             player.sendMessage("Stopped the game, teleported players, reset teams and cleared inventories.");
             return true;
@@ -294,6 +295,38 @@ public class PluginCommands implements CommandExecutor {
                 }
                 Bukkit.broadcastMessage("§eThe game has ended in a draw!");
             }
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("captureprogress") && (commandSender.hasPermission("animalcapture.captureprogress") || commandSender.isOp())) {
+            Objective captured = player.getScoreboard().getObjective("captured");
+            Objective redTeamScore = player.getScoreboard().getObjective("redScore");
+            Objective blueTeamScore = player.getScoreboard().getObjective("blueScore");
+            if (captured == null || blueTeamScore == null || redTeamScore == null) {
+                player.sendMessage("Scoreboard objectives do not exist, have you initialised?");
+                return false;
+            }
+
+            int redTeamScoreVal = redTeamScore.getScore("").getScore();
+            int blueTeamScoreVal = blueTeamScore.getScore("").getScore();
+
+            if (redTeamScoreVal > blueTeamScoreVal) {
+                Bukkit.broadcastMessage("The §4§lRed §rteam is winning with §l" + redTeamScoreVal + " points!");
+            } else if (blueTeamScoreVal > redTeamScoreVal) {
+                Bukkit.broadcastMessage("The §1§lBlue §rteam is winning with §l" + blueTeamScoreVal + " points!");
+            } else {
+                Bukkit.broadcastMessage("The game is currently a draw with §l" + redTeamScoreVal + " points each!");
+            }
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("capturehelp") && (commandSender.hasPermission("animalcapture.capturehelp") || commandSender.isOp())) {
+            player.sendMessage("§2/captureinit §r- Initialise the plugin and ready for the game");
+            player.sendMessage("§2/capturestart §r- Start the game");
+            player.sendMessage("§2/capturestop §r- Stop the game");
+            player.sendMessage("§2/capturereset §r- Reset the scoreboard and total scores");
+            player.sendMessage("§2/captureannounce §r- Announce the winner");
+            player.sendMessage("§2/captureprogress §r- Show the current progress");
             return true;
         }
 

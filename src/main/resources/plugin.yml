@@ -11,26 +11,50 @@ commands:
     usage: /captureinit
     aliases:
       - initcapture
+    permission: animalcapture.captureinit
+    permission-message: You do not have permission to use this command.
   capturestart:
     description: Start the game
     usage: /capturestart
     aliases:
       - startcapture
+    permission: animalcapture.capturestart
+    permission-message: You do not have permission to use this command.
   capturestop:
     description: Stop the game
     usage: /capturestop
     aliases:
       - stopcapture
+    permission: animalcapture.capturestop
+    permission-message: You do not have permission to use this command.
   captureannounce:
     description: Announce the winner
     usage: /captureannounce
     aliases:
       - announcecapture
+    permission: animalcapture.captureannounce
+    permission-message: You do not have permission to use this command.
   capturereset:
     description: Reset the scores
     usage: /capturereset
     aliases:
       - resetcapture
+    permission: animalcapture.capturereset
+    permission-message: You do not have permission to use this command.
+  captureprogress:
+    description: Show the progress of the game
+    usage: /captureprogress
+    aliases:
+      - progresscapture
+    permission: animalcapture.captureprogress
+    permission-message: You do not have permission to use this command.
+  capturehelp:
+    description: Show the help menu
+    usage: /capturehelp
+    aliases:
+      - helpcapture
+    permission: animalcapture.capturehelp
+    permission-message: You do not have permission to use this command.
 default-permission: op
 permissions:
   animalcapture.captureinit:
