@@ -72,3 +72,9 @@ permissions:
   animalcapture.capturereset:
     description: Reset the scores
     default: op
+  animalcapture.captureprogress:
+    description: Show the progress of the game
+    default: op
+  animalcapture.capturehelp:
+    description: Show the help menu
+    default: op
